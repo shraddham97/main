@@ -1,0 +1,414 @@
+
+
+Customer Service.Java--->
+package com.infy.service;
+
+import java.util.List;
+import com.infy.dto.CustomerDTO;
+
+public interface CustomerService {
+	
+	public CustomerDTO getCustomer(Integer customerId) throws Exception;
+	public List<CustomerDTO> getCustomerDetails() throws Exception;
+}
+-------------------------------------------------------------------------------------------
+
+Mobile Service.java--->
+package com.infy.service;
+
+import java.util.List;
+import com.infy.dto.MobileDTO;
+import com.infy.dto.MobileDTO;
+
+public interface MobileService {
+      public List<MobileDTO> getMobileDetails() throws Exception;
+
+}
+---------------------------------------------------------------------------------------------
+
+CustomerServiceImpl---->
+package com.infy.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.infy.dto.CustomerDTO;
+import com.infy.dto.MobileDTO;
+import com.infy.entity.Customer;
+import com.infy.repository.CustomerRepository;
+
+//DONT MODIFY NAME OF CLASS
+//DONT ADD/MODIFY/DELETE/COMMENT ANY METHOD
+//DONT DELETE/MODIFY INSTANCE VARIABLE(IF PRESENT)
+//DONT MODIFY ANNOTATIONS(IF PRESENT)
+
+public class CustomerServiceImpl implements CustomerService {
+	@Autowired
+	private CustomerRepository customerRespository;
+	@Override
+	public CustomerDTO getCustomer(Integer customerId) throws Exception {
+		Optional<Customer> optional = customerRespository.findById(customerId);
+		Customer customer = optional.orElseThrow(() -> new Exception("Service.CUSTOMER_NOT_FOUND"));
+		CustomerDTO customerDto = new CustomerDTO();
+		customerDto.setCustomerId(customer.getCustomerId());
+		customerDto.setCustomerName(customer.getCustomerName());
+		customerDto.setAddress(customer.getAddress());
+		
+		MobileDTO mobiledto=new MobileDTO();
+		mobiledto.setMobileId(customer.getMobile().getMobileId());
+		mobiledto.setCompanyName(customer.getMobile().getCompanyName());
+		mobiledto.setModelName(customer.getMobile().getModelName());
+		mobiledto.setRam(customer.getMobile().getRam());
+		mobiledto.setOs(customer.getMobile().getOs());
+		mobiledto.setPrice(customer.getMobile().getPrice());
+		customerDto.setMobile(mobiledto);
+		return customerDto;
+	}
+
+	@Override
+	public List<CustomerDTO> getCustomerDetails() throws Exception {
+		Iterable<Customer> customers = customerRespository.findAll();
+		List<CustomerDTO> customerDTOs = new ArrayList<>();
+		customers.forEach(customer -> {
+			CustomerDTO customerDto = new CustomerDTO();
+			customerDto.setCustomerId(customer.getCustomerId());
+			customerDto.setCustomerName(customer.getCustomerName());
+			customerDto.setAddress(customer.getAddress());
+			
+			MobileDTO mobiledto=new MobileDTO();
+			mobiledto.setMobileId(customer.getMobile().getMobileId());
+			mobiledto.setCompanyName(customer.getMobile().getCompanyName());
+			mobiledto.setModelName(customer.getMobile().getModelName());
+			mobiledto.setRam(customer.getMobile().getRam());
+			mobiledto.setOs(customer.getMobile().getOs());
+			mobiledto.setPrice(customer.getMobile().getPrice());
+			customerDto.setMobile(mobiledto);
+			customerDTOs.add(customerDto);
+		});
+		if (customerDTOs.isEmpty())
+			throw new Exception("Service.CUSTOMERS_NOT_FOUND");
+		return customerDTOs;
+	}
+
+	
+
+}
+------------------------------------------------------------------------------------------
+
+MobileServiceImpl----->
+package com.infy.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.infy.dto.MobileDTO;
+import com.infy.entity.Mobile;
+import com.infy.repository.MobileRepository;
+
+@Service(value="mobileService")
+@Transactional
+public class MobileServiceImpl implements MobileService {
+	
+	@Autowired
+	private MobileRepository mobileRepository;
+
+	@Override
+	public List<MobileDTO> getMobileDetails() throws Exception {
+		Iterable<Mobile> mobiles = mobileRepository.findAll();
+		List<MobileDTO> mobileDTOs = new ArrayList<>();
+		mobiles.forEach(mobile -> {
+			MobileDTO mobileDto = new MobileDTO();
+			mobileDto.setMobileId(mobile.getMobileId());
+			mobileDto.setModelName(mobile.getModelName());
+			mobileDto.setCompanyName(mobile.getCompanyName());
+			mobileDto.setPrice(mobile.getPrice());
+			mobileDto.setOs(mobile.getOs());
+			mobileDto.setRam(mobile.getRam());
+			mobileDTOs.add(mobileDto);
+		});
+		if (mobileDTOs.isEmpty())
+			throw new Exception("Service.CUSTOMERS_NOT_FOUND");
+		return mobileDTOs;
+	}
+	
+
+}
+----------------------------------------------------------------------------------
+
+CustomerRepository.java------>
+package com.infy.repository;
+
+
+import org.springframework.data.repository.CrudRepository;
+import com.infy.entity.Customer;
+public interface CustomerRepository extends CrudRepository<Customer, Integer> {
+}
+---------------------------------------------------------------------------------------
+
+MobileRepository.java----->
+
+package com.infy.repository;
+
+
+import org.springframework.data.repository.CrudRepository;
+
+import com.infy.entity.Mobile;
+
+public interface MobileRepository extends CrudRepository<Mobile, Integer> {
+}
+----------------------------------------------------------------------------------
+
+------Entity classes----
+Customer.java----->
+package com.infy.entity;
+
+import java.util.Objects;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+
+//Strictly follow class diagram
+@Entity
+@Table(name="customer")
+public class Customer {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer customerId;
+	
+	private String customerName;
+	
+	
+	private String address;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "mobile_id", unique = true)
+	private Mobile mobile;
+
+	public Integer getCustomerId() {
+		return customerId;
+	}
+
+	public void setCustomerId(Integer customerId) {
+		this.customerId = customerId;
+	}
+
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public Mobile getMobile() {
+		return mobile;
+	}
+
+	public void setMobile(Mobile mobile) {
+		this.mobile = mobile;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(address, customerId, customerName, mobile);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Customer other = (Customer) obj;
+		return Objects.equals(address, other.address) && Objects.equals(customerId, other.customerId)
+				&& Objects.equals(customerName, other.customerName) && Objects.equals(mobile, other.mobile);
+	}
+	
+	
+
+}
+------------------------------------------------------------------------------------------------------------------------------------
+
+-----Entity Class------
+Mobile.java
+package com.infy.entity;
+
+import java.util.Objects;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+//Strictly follow class diagram
+@Entity
+@Table(name="mobile")
+public class Mobile {
+	
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer mobileId;
+	
+	private String companyName;
+
+	private  String modelName;
+	
+	
+	private  String ram;
+	private  String os;
+	private Integer price;
+	public Integer getMobileId() {
+		return mobileId;
+	}
+	public void setMobileId(Integer mobileId) {
+		this.mobileId = mobileId;
+	}
+	public String getCompanyName() {
+		return companyName;
+	}
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+	public String getModelName() {
+		return modelName;
+	}
+	public void setModelName(String modelName) {
+		this.modelName = modelName;
+	}
+	public String getRam() {
+		return ram;
+	}
+	public void setRam(String ram) {
+		this.ram = ram;
+	}
+	public String getOs() {
+		return os;
+	}
+	public void setOs(String os) {
+		this.os = os;
+	}
+	public Integer getPrice() {
+		return price;
+	}
+	public void setPrice(Integer price) {
+		this.price = price;
+	}
+	@Override
+	public int hashCode() {
+		return Objects.hash(companyName, mobileId, modelName, os, price, ram);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Mobile other = (Mobile) obj;
+		return Objects.equals(companyName, other.companyName) && Objects.equals(mobileId, other.mobileId)
+				&& Objects.equals(modelName, other.modelName) && Objects.equals(os, other.os)
+				&& Objects.equals(price, other.price) && Objects.equals(ram, other.ram);
+	}
+
+	
+	
+}
+-------------------------------------------------------------------------------------------------------------------
+
+MobileAppAPI.java----
+package com.infy.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.infy.dto.CustomerDTO;
+import com.infy.dto.MobileDTO;
+import com.infy.service.CustomerService;
+import com.infy.service.MobileService;
+
+//DONT MODIFY NAME OF CLASS
+//DONT ADD/MODIFY/DELETE/COMMENT ANY METHOD
+//DONT DELETE/MODIFY INSTANCE VARIABLE(IF PRESENT)
+//DONT MODIFY ANNOTATIONS(IF PRESENT)
+@RestController
+@RequestMapping(value = "/infymobile")
+public class MobileAppAPI {
+	@Autowired
+	private CustomerService customerService;
+	@Autowired
+	private MobileService mobileService;
+	@Autowired
+	private Environment environment;
+	
+	@GetMapping(value = "/mobile")
+	public ResponseEntity<List<MobileDTO>> getMobileDetails() throws Exception {
+		try {
+		List<MobileDTO> mobileDTOs = mobileService.getMobileDetails();
+		return new ResponseEntity<>(mobileDTOs, HttpStatus.OK);
+		}catch(Exception exception) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, environment.getProperty(exception.getMessage()), exception);
+		}
+	}
+	
+	@GetMapping(value = "/customer")
+	public ResponseEntity<List<CustomerDTO>> getAllCustomers() throws Exception {
+		try {
+		List<CustomerDTO> customerDTOs = customerService.getCustomerDetails();
+		return new ResponseEntity<>(customerDTOs, HttpStatus.OK);
+		}catch(Exception exception) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, environment.getProperty(exception.getMessage()), exception);
+		}
+	}
+	
+	@GetMapping(value = "/customer/{customerId}")
+	public ResponseEntity<CustomerDTO> getCustomer(@PathVariable Integer customerId) throws Exception {
+		try {
+		CustomerDTO customerDTO = customerService.getCustomer(customerId);
+		return new ResponseEntity<>(customerDTO, HttpStatus.OK);
+		}catch(Exception exception) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, environment.getProperty(exception.getMessage()), exception);
+		}
+	}
+}
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
